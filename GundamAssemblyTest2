@@ -1,0 +1,53 @@
+.text
+.globl main
+
+main:
+#Set target ID
+chargeup $R1, $R0, 42 # R1 = target id
+
+# Set enemy ID
+chargeup $R3, $R0, 43 # R3 = enemy id
+
+# Base power
+chargeup $R2, $R0, 10 # R2 = base power
+
+# Give some EN so transam can fire
+chargeup $R6, $R0, 3
+energize $R6 # EN = 3
+
+# Call the LockOnAndTransAm routine (R7 = link)
+callbase  LockOnAndTransAm
+
+AfterLock:
+#Save final power from R2 into some safe register (R8) for viewing
+#R8 = R2 + 0  (use beamfuse as add)
+beamfuse $R8, $R2, $R0
+
+#Now overwrite v0/R2 with syscall code 10
+chargeup $R2, $R0, 10 # R2 now 10
+syscall
+
+
+# Subroutine: LockOnAndTransAm
+# Assumes:
+#R1 = target id
+#R3 = enemy id
+#R2 = power
+#R7 = return address
+
+LockOnAndTransAm:
+#Lock on: R5 = 1 and SR.LOCKON = 1 if R1 == R3
+lockon $R5, $R1, $R3
+
+#If R5 == 0, no lock => skip boost/transam
+formup $R5, $R0, NoLock
+
+#Power up:
+#First double the power
+boost $R2, $R2
+
+#Then Trans-am: if EN > 0, R2 = R2 * 3 and EN--
+transam $R2, $R2
+
+NoLock:
+dock $R7

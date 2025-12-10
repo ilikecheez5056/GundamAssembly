@@ -1,0 +1,28 @@
+# Sum1ToN: R2 = 1 + 2 + ... + R1
+# Assumes: R1 = n, R7 = return address
+
+Sum1ToN:
+# sum = 0
+chargeup $R2, $R0, 0
+
+# i = 1
+chargeup $R3, $R0, 1
+
+Loop_Sum:
+# R4 = 1 if N < i   (prioritylock sets rd = 1 when rs < rt)
+prioritylock $R4, $R1, $R3
+
+# if R4 != 0 then branch to Done_Sum
+scatter $R4, $R0, Done_Sum
+
+# sum += i
+beamfuse $R2, $R2, $R3
+
+# i++
+chargeup $R3, $R3, 1
+
+# loop back
+jumpbase Loop_Sum
+
+Done_Sum:
+dock $R7

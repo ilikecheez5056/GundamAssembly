@@ -1,0 +1,87 @@
+.text
+.globl main
+
+main:
+
+# 1. Basic arithmetic / logic
+
+chargeup  $R1, $R0, 10 # R1 = 10
+chargeup  $R2, $R0, 5 # R2 = 5
+
+beamfuse  $R3, $R1, $R2 # R3 = 15
+sabercut  $R4, $R1, $R2 # R4 = 5
+overdrive $R5, $R1, $R2 # R5 = 50
+
+phasejam   $R6, $R1, $R2 # 10 ^ 5 = 15
+sensorlock $R7, $R1, $R2 # 10 & 5 = 0
+prioritylock $R8, $R2, $R1 # R8 = 1
+boost     $R9, $R2 # R9 = 10
+
+
+# 2. Flags / EN / Trans-am / scab
+
+lockon    $R10, $R1, $R1 # R10 = 1, LOCKON=1
+shieldup  $R10 # SHIELD=1
+
+chargeup  $R11, $R0, 3 # R11 = 3
+energize  $R11 # EN = 3
+
+transam   $R12, $R3 # R12 = 45, EN should now be 2
+
+scan      $R13, 0 # SR
+scan      $R14, 1 # EN
+scan      $R15, 2 # MS
+
+# 3. Deploybits / Thrust
+
+chargeup  $R16, $R0, 8
+chargeup  $R17, $R0, 2
+
+deploybits $R18, $R16, $R17 # R18 = 4
+
+thrust    $R19, $R1, 1 # R19 = R1 + (1 << 2) = 14
+
+# 4. Branch tests
+
+        formup    $R1, $R1, Equal1
+        chargeup  $R20, $R0, -1 # formup failed marker
+        jumpbase  AfterEqual1
+
+Equal1:
+        scatter   $R1, $R2, Noteq1
+        chargeup  $R21, $R0, -1 # scatter failed marker
+        jumpbase  AfterNoteq1
+
+Noteq1:
+        chargeup  $R22, $R0, 1 # success marker
+
+AfterNoteq1:
+AfterEqual1:
+
+# 5. Autoevade
+
+        autoevade DangerHandler
+        jumpbase  AfterDanger
+
+DangerHandler:
+        boost     $R23, $R1
+        jumpbase  AfterDanger
+
+AfterDanger:
+
+# 6. Call / return using callbase + dock
+
+        callbase BaseRoutine
+
+AfterBase:
+        chargeup $R24, $R0, 42  # mark successful return
+        jumpbase End
+
+BaseRoutine:
+        boost $R28, $R2
+        dock  $R7 # return via link register
+
+# 7. End loop
+End:
+        jumpbase End
+        syscall

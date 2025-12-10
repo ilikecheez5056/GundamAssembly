@@ -1,0 +1,52 @@
+.text
+.globl main
+
+main:
+# Example: EN = 12
+chargeup $R1, $R0, 12 # R1 = 12
+energize $R1 # EN = 12
+
+
+# Call the shield routine
+callbase RaiseShieldIfEnergyAndDanger
+
+AfterShield:
+# Stop (syscall exit)
+chargeup $R2, $R0, 10
+syscall
+
+
+
+# Shield routine
+
+RaiseShieldIfEnergyAndDanger:
+# R1 = EN
+scan $R1, 1
+
+#R2 = 10
+chargeup  $R2, $R0, 10
+
+# R3 = 1 if EN < 10
+prioritylock $R3, $R1, $R2
+
+# If EN < 10, branch to NoShield
+scatter $R3, $R0, NoShield
+
+# R4 = SR
+scan $R4, 0
+
+# R5 = 0x80 (danger bit mask)
+chargeup $R5, $R0, 0x80
+
+# R6 = SR & 0x80
+sensorlock $R6, $R4, $R5
+
+# If R6 == 0 then no danger -> branch
+formup $R6, $R0, NoShield
+
+# Raise shield: if not 0
+chargeup $R7, $R0, 1
+shieldup $R7
+
+NoShield:
+dock $R7
